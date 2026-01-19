@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="ServiceHub.Contracts/ServiceHub.Contracts.csproj" Id="7da400b7-55ec-4153-b60d-ac2d50c570f6" />
-  <Project Path="ServiceHub.Core/ServiceHub.Core.csproj" Id="9c36fdeb-78ae-4ac0-a50c-1df2dcb3654b" />
+  <Project Path="ServiceHub.Core/ServiceHub.Core.csproj" Id="e6c94407-6236-4ac1-8ced-6fab6fe80c4c" />
+  <Project Path="ServiceHub.Host/ServiceHub.Host.csproj" Id="682736a2-5dd5-4dff-a4a0-4bb7d7ee29cf" />
 </Solution>
