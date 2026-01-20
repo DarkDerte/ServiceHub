@@ -1,4 +1,6 @@
-﻿namespace ServiceHub.Contracts
+﻿using ServiceHub.Contracts.Enums;
+
+namespace ServiceHub.Contracts.Interfaces
 {
     public interface IServiceModule
     {
@@ -6,5 +8,6 @@
         void Initialize(IServiceContext context);
         Task StartAsync(CancellationToken token);
         void Stop();
+        ServiceState State();
     }
 }

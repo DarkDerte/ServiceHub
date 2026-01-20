@@ -1,4 +1,4 @@
-﻿namespace ServiceHub.Contracts
+﻿namespace ServiceHub.Contracts.Interfaces
 {
     public interface IServiceContext
     {
