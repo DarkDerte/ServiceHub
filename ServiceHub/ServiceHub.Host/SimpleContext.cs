@@ -1,4 +1,4 @@
-﻿using ServiceHub.Contracts;
+﻿using ServiceHub.Contracts.Interfaces;
 
 namespace ServiceHub.Host
 {

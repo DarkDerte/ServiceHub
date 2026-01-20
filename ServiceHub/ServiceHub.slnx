@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Modules/">
+    <Project Path="Modules/ServiceHub.Modules.StaticWeb/ServiceHub.Modules.StaticWeb.csproj" Id="28cb6fb7-ed37-43c0-b33c-4ed5abed6da5" />
+  </Folder>
   <Project Path="ServiceHub.Contracts/ServiceHub.Contracts.csproj" Id="7da400b7-55ec-4153-b60d-ac2d50c570f6" />
   <Project Path="ServiceHub.Core/ServiceHub.Core.csproj" Id="e6c94407-6236-4ac1-8ced-6fab6fe80c4c" />
   <Project Path="ServiceHub.Host/ServiceHub.Host.csproj" Id="682736a2-5dd5-4dff-a4a0-4bb7d7ee29cf" />

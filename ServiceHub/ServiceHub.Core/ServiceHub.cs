@@ -1,17 +1,69 @@
-﻿using ServiceHub.Contracts;
+﻿using ServiceHub.Contracts.Interfaces;
+using ServiceHub.Core.Model;
 using System.Reflection;
 
 namespace ServiceHub.Core
 {
     public sealed class ServiceHub
     {
+        #region Singleton
+        
         private static readonly Lazy<ServiceHub> _instance = new(() => new ServiceHub());
+        
         public static ServiceHub Instance => _instance.Value;
 
-        private readonly List<IServiceModule> _modules = new();
+        private ServiceHub() { }
+
+        #endregion
+
+        #region Properties
+
+        private Dictionary<string, Type> _availableModules = new ();
+
+        private Dictionary<string, ServiceInstance> _modulesLoaded = new();
+
         private readonly CancellationTokenSource _cts = new();
 
-        private ServiceHub() { }
+        #endregion
+
+        #region Public Methods
+
+        public bool InitModule(string typeService, string name, IServiceContext context)
+        {
+            if (!_availableModules.TryGetValue(typeService, out Type? type))
+                return false;
+
+            try {
+                var instance = new ServiceInstance(name, type, context);
+                _modulesLoaded.Add(name.ToLower().Trim(), instance);
+            } 
+            catch {
+                return false;
+            }
+            return true;
+        }
+
+        public void Start(string name)
+        {
+            if(_modulesLoaded.TryGetValue(name.Trim().ToLower(), out ServiceInstance? instance))
+                Task.Run(() => instance.StartAsync(_cts.Token));
+        }
+
+        public void Stop(string name)
+        {
+            if (_modulesLoaded.TryGetValue(name.Trim().ToLower(), out ServiceInstance? instance))
+                Task.Run(() => { instance.Stop(_cts.Token); _modulesLoaded.Remove(name); });
+        }
+
+        public void StopAll()
+        {
+            _cts.Cancel();
+            _modulesLoaded.ToList().ForEach((x) => {
+                try { x.Value.Stop(_cts.Token); } catch { }
+            });
+        }
+
+        #endregion
 
         public void LoadModules(string folderPath, IServiceContext context)
         {
@@ -19,47 +71,34 @@ namespace ServiceHub.Core
                 Directory.CreateDirectory(folderPath);
 
             foreach (var folder in (new DirectoryInfo(folderPath)).GetDirectories())
-
-            foreach (var file in Directory.GetFiles(folder.FullName, "*.dll"))
             {
-                try
+                foreach (var file in Directory.GetFiles(folder.FullName, "*.dll"))
                 {
-                    var assembly = Assembly.LoadFrom(file);
-                    foreach (var type in assembly.GetTypes())
+                    try
                     {
-                        if (!typeof(IServiceModule).IsAssignableFrom(type) || type.IsAbstract)
-                            continue;
+                        var assembly = Assembly.LoadFrom(file);
+                        foreach (var type in assembly.GetTypes())
+                        {
+                            if (!typeof(IServiceModule).IsAssignableFrom(type) || type.IsAbstract)
+                                continue;
 
-                        var module = (IServiceModule)Activator.CreateInstance(type);
-                        module.Initialize(context);
-                        _modules.Add(module);
-                        context.Log($"Loaded module: {module.Name}");
+                            var name = ((IServiceModule)Activator.CreateInstance(type))?.Name;
+                            if (!string.IsNullOrWhiteSpace(name))
+                            {
+                                _availableModules.Add(name ?? string.Empty, type);
+                                context.Log($"Loaded module: {name}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        context.Log($"Failed to load {file}: {ex.Message}");
                     }
                 }
-                catch (Exception ex)
-                {
-                    context.Log($"Failed to load {file}: {ex.Message}");
-                }
             }
         }
 
-        public void Start()
-        {
-            foreach (var module in _modules)
-            {
-                Task.Run(() => module.StartAsync(_cts.Token));
-            }
-        }
-
-        public void Stop()
-        {
-            _cts.Cancel();
-            foreach (var module in _modules)
-            {
-                try { module.Stop(); } catch { }
-            }
-        }
-
-        public IReadOnlyList<IServiceModule> Modules => _modules.AsReadOnly();
+        public IReadOnlyList<string> Modules => _availableModules.Select(x=>x.Key).ToList().AsReadOnly();
+        public IReadOnlyList<string> ServicesInitialized => _modulesLoaded.Keys.ToList().AsReadOnly();
     }
 }
