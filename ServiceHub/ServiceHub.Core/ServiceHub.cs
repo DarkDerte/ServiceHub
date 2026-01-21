@@ -28,14 +28,19 @@ namespace ServiceHub.Core
 
         #region Public Methods
 
-        public bool InitModule(string typeService, string name, IServiceContext context)
+        public bool InitModule(ILogContext log, IConfigContext config)
         {
+            var typeService = config.Get("type") ?? string.Empty;
+
+            if (string.IsNullOrEmpty(typeService))
+                throw new ArgumentNullException("type");
+
             if (!_availableModules.TryGetValue(typeService, out Type? type))
                 return false;
 
             try {
-                var instance = new ServiceInstance(name, type, context);
-                _modulesLoaded.Add(name.ToLower().Trim(), instance);
+                var instance = new ServiceInstance(log, config, type);
+                _modulesLoaded.Add(instance.Name.ToLower().Trim(), instance);
             } 
             catch {
                 return false;
@@ -65,7 +70,7 @@ namespace ServiceHub.Core
 
         #endregion
 
-        public void LoadModules(string folderPath, IServiceContext context)
+        public void LoadModules(ILogContext log, string folderPath)
         {
             if (!Directory.Exists(folderPath))
                 Directory.CreateDirectory(folderPath);
@@ -86,13 +91,13 @@ namespace ServiceHub.Core
                             if (!string.IsNullOrWhiteSpace(name))
                             {
                                 _availableModules.Add(name ?? string.Empty, type);
-                                context.Log($"Loaded module: {name}");
+                                log.Info($"Loaded module: {name}");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        context.Log($"Failed to load {file}: {ex.Message}");
+                        log.Warning($"Failed to load {file}: {ex.Message}");
                     }
                 }
             }

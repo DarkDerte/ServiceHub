@@ -8,24 +8,38 @@ namespace ServiceHub.Modules.StaticWeb
 {
     public class StaticWebModule : IServiceModule
     {
-        private WebServer _server;
+        private int _port = 8080;
+        private string _directory = "wwwroot";
+
+        private WebServer? _server;
         private CancellationToken _token;
+        private ILogContext? _logContext;
+        private IConfigContext? _configContext;
 
         public string Name => "StaticWebModule";
 
-        public void Initialize(IServiceContext context)
+        public void Initialize(ILogContext log, IConfigContext config)
         {
-            context.Log($"{Name} initialized.");
+            _logContext = log;
+            _configContext = config;
+
+            var port = _configContext.Get("port") ?? "8080";
+            var root = _configContext.Get("directory") ?? "wwwroot";
+
+            _port = int.Parse(port);
+            _directory = root;
+
+            _logContext.Info($"{Name} initialized.");
         }
 
         public async Task StartAsync(CancellationToken token)
         {
             _token = token;
 
-            var fileProvider = new PhysicalFileProvider(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Modules", "WebModule", "wwwroot"));
+            var fileProvider = new PhysicalFileProvider(_directory);
 
             _server = new WebServer(o => o
-                    .WithUrlPrefix("http://localhost:8080/")
+                    .WithUrlPrefix($"http://localhost:{_port}/")
                     .WithMode(HttpListenerMode.EmbedIO))
                 .WithLocalSessionManager()
                 .WithModule(new FileModule("wwwroot", (EmbedIO.Files.IFileProvider)fileProvider));
