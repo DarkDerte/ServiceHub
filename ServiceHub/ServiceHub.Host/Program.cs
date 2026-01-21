@@ -1,25 +1,51 @@
-﻿namespace ServiceHub.Host
+﻿using ServiceHub.Core.Classes;
+
+namespace ServiceHub.Host
 {
     internal class Program
     {
         static void Main(string[] args)
         {
             var context = new SimpleContext();
-            Core.ServiceHub.Instance.LoadModules("Modules", context);
-            Core.ServiceHub.Instance.InitModule(Core.ServiceHub.Instance.Modules.First(), "test", context);
-            Core.ServiceHub.Instance.Start("test");
+            var log = new LogContext();
 
-            Console.WriteLine("ServiceHub running. Press any key to stop...");
+            context.LoadJson(@"{
+  ""services"": [
+    {
+      ""name"": ""WebStatic"",
+      ""type"": ""StaticWebModule"",
+      ""parameters"": {
+          ""port"": ""8080"",
+          ""root"": ""wwwroot""
+      }
+    }
+  ]
+}");
+
+            Core.ServiceHub.Instance.LoadModules(log, "Modules");
+
+            if (context.GetConfig("services") == null)
+                throw new Exception("Json Config is not valid");
+
+            log.Info("ServiceHub running...");
+            foreach (var localContext in context.GetConfig("services").Items)
+            {
+                Core.ServiceHub.Instance.InitModule(log, localContext);
+                Core.ServiceHub.Instance.Start(localContext.Get("name"));
+
+            }
+            log.Info("Press any key to stop...");
             Console.ReadKey();
 
-            Core.ServiceHub.Instance.Stop("test");
+            foreach (var item in Core.ServiceHub.Instance.ServicesInitialized)
+                Core.ServiceHub.Instance.Stop(item);
 
-            Console.WriteLine("ServiceHub stopping.");
+            log.Info("ServiceHub stopping...");
 
             while (Core.ServiceHub.Instance.ServicesInitialized.Count > 0)
                 Thread.Sleep(100);
 
-            Console.WriteLine("ServiceHub stopped.");
+            log.Info("ServiceHub stopped.");
         }
     }
 }

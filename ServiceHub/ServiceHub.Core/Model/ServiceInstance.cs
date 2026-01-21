@@ -6,31 +6,41 @@ namespace ServiceHub.Core.Model
     internal sealed class ServiceInstance
     {
         private string _serviceName;
-        private IServiceModule? ServiceModule { get; set; }
-        private IServiceContext Context { get; set; }
-        public ServiceState State => ServiceModule?.State() ?? ServiceState.Error;
+        private IServiceModule? _serviceModule { get; set; }
+        private IConfigContext _config { get; set; }
+        private ILogContext _log { get; set; }
+        public ServiceState State => _serviceModule?.State() ?? ServiceState.Error;
 
         public string Name => _serviceName;
 
-        public void StartAsync(CancellationToken ct) => ServiceModule?.StartAsync(ct);
+        public void StartAsync(CancellationToken ct) => _serviceModule?.StartAsync(ct);
 
-        public void Stop(CancellationToken ct) => ServiceModule?.Stop();
+        public void Stop(CancellationToken ct) => _serviceModule?.Stop();
 
-        public ServiceInstance(string name, Type type, IServiceContext context) 
+        public ServiceInstance(ILogContext log, IConfigContext config, Type type) 
         {
-            Context = context;
-            _serviceName = name;
+            _config = config;
+            _log = log;
+
+            _serviceName = config.Get("name") ?? string.Empty;
+            if (string.IsNullOrEmpty(_serviceName))
+                throw new ArgumentNullException("name");
+
+            IConfigContext? contextValue = config.GetConfig("parameters");
+            if (contextValue == null)
+                throw new ArgumentNullException("parameters");
+
             try
             {
                 if (!typeof(IServiceModule).IsAssignableFrom(type) || type.IsAbstract)
                     throw new Exception($"The {type.Name} Module is not valid" );
 
-                ServiceModule = (IServiceModule)Activator.CreateInstance(type);
-                ServiceModule?.Initialize(context);
+                _serviceModule = (IServiceModule)Activator.CreateInstance(type);
+                _serviceModule?.Initialize(log, contextValue);
             }
             catch (Exception ex)
             {
-                Context.Log($"Error : {ex.Message}");
+                _log.Error($"Error : {ex.Message}");
                 throw;
             }
         }
