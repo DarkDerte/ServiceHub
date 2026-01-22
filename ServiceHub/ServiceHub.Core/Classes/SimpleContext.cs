@@ -27,6 +27,10 @@ namespace ServiceHub.Core.Classes
             Node = Traverse(path);
         }
 
+        public void ResetNode() {
+            Node = null;
+        }
+
         public IServiceContext[] Items { get => (Node ?? Root).Items.Select(x => new SimpleContext(x)).ToArray(); }
 
         public SimpleContext() { }

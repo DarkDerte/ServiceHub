@@ -12,11 +12,10 @@ namespace ServiceHub.Modules.MQTT
 
         public string Name => "MqttModule";
 
-
         public void Initialize(ILogContext log, IServiceContext config)
         {
             _log = log;
-            throw new NotImplementedException();
+            _log.Info($"{Name} initialized.");
         }
 
         public Task StartAsync(CancellationToken token)
@@ -29,10 +28,10 @@ namespace ServiceHub.Modules.MQTT
             {
                 switch (e.LogMessage.Level)
                 {
-                    case MqttNetLogLevel.Error: _log?.Error(e.LogMessage.Message); break;
-                    case MqttNetLogLevel.Warning: _log?.Warning(e.LogMessage.Message); break;
+                    case MqttNetLogLevel.Error: _log?.Error($"{Name} {e.LogMessage.Message}"); break;
+                    case MqttNetLogLevel.Warning: _log?.Warning($"{Name} {e.LogMessage.Message}"); break;
                     case MqttNetLogLevel.Info:
-                    case MqttNetLogLevel.Verbose: _log?.Info(e.LogMessage.Message); break;
+                    case MqttNetLogLevel.Verbose: _log?.Info($"{Name} {e.LogMessage.Message}"); break;
                 }
             };
 

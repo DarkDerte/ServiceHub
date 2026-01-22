@@ -9,6 +9,8 @@ namespace ServiceHub.Contracts.Interfaces
 
         void SetNode(string path);
 
+        void ResetNode();
+
         IServiceContext[] Items { get; }
 
         void LoadJson(string json);

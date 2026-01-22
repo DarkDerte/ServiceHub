@@ -18,6 +18,11 @@ namespace ServiceHub.Host
           ""port"": ""8080"",
           ""root"": ""wwwroot""
       }
+    },
+    {
+      ""name"": ""MqttIot"",
+      ""type"": ""MqttModule"",
+      ""parameters"": { }
     }
   ]
 }");
@@ -35,6 +40,7 @@ namespace ServiceHub.Host
             {
                 context.SetNode($"services:{i}");
                 Core.ServiceHub.Instance.InitModule(log, context);
+                context.ResetNode();
             }
 
             foreach (var item in Core.ServiceHub.Instance.ServicesInitialized)
