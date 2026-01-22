@@ -1,23 +1,37 @@
 ﻿using ServiceHub.Contracts.Interfaces;
 using System.Text.Json;
+using System.Xml.Linq;
 
 namespace ServiceHub.Core.Classes
 {
-    public class SimpleContext : IConfigContext
+    public class SimpleContext : IServiceContext
     {
-        internal ConfigNode Root { get; } = new();
+        private ConfigNode Root { get; } = new ();
+
+        private ConfigNode? Node { get; set; } = null;
 
         public string? Value
         {
             get
             {
-                if (Root == null)
-                    return null;
-                return Root.Value;
+                if (Node == null)
+                    return Root.Value;
+                return Node.Value;
             }
         }
 
-        public IConfigContext[] Items { get => Root.Items.Select(x => new SimpleContext(x)).ToArray(); }
+        public void SetNode(string path)
+        {
+            if (Root == null)
+                return;
+            Node = Traverse(path);
+        }
+
+        public void ResetNode() {
+            Node = null;
+        }
+
+        public IServiceContext[] Items { get => (Node ?? Root).Items.Select(x => new SimpleContext(x)).ToArray(); }
 
         public SimpleContext() { }
         internal SimpleContext(ConfigNode root) { Root = root; }
@@ -59,12 +73,16 @@ namespace ServiceHub.Core.Classes
 
         public string? Get(string path) => Traverse(path)?.Value;
 
-        public IConfigContext? GetConfig(string path) => Traverse(path);
+        public IServiceContext? GetConfig(string path) 
+        { 
+            var data = Traverse(path); 
+            return data == null ? null : (IServiceContext) new SimpleContext(data);
+        }
 
-        private IConfigContext? Traverse(string path)
+        private ConfigNode? Traverse(string path)
         {
             var parts = path.Split(':', StringSplitOptions.RemoveEmptyEntries);
-            ConfigNode current = Root;
+            ConfigNode? current = Node ?? Root;
 
             foreach (var part in parts)
             {
@@ -78,7 +96,7 @@ namespace ServiceHub.Core.Classes
                     return null;
             }
 
-            return new SimpleContext(current);
+            return current;
         }
     }
 }

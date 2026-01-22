@@ -28,7 +28,7 @@ namespace ServiceHub.Core
 
         #region Public Methods
 
-        public bool InitModule(ILogContext log, IConfigContext config)
+        public bool InitModule(ILogContext log, IServiceContext config)
         {
             var typeService = config.Get("type") ?? string.Empty;
 
@@ -87,7 +87,7 @@ namespace ServiceHub.Core
                             if (!typeof(IServiceModule).IsAssignableFrom(type) || type.IsAbstract)
                                 continue;
 
-                            var name = ((IServiceModule)Activator.CreateInstance(type))?.Name;
+                            var name = ((IServiceModule?)Activator.CreateInstance(type))?.Name;
                             if (!string.IsNullOrWhiteSpace(name))
                             {
                                 _availableModules.Add(name ?? string.Empty, type);

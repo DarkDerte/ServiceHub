@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Modules/">
+    <Project Path="Modules/ServiceHub.Modules.MQTT/ServiceHub.Modules.MQTT.csproj" Id="843066df-dcc6-4628-89ae-7a8434b09fc8" />
     <Project Path="Modules/ServiceHub.Modules.StaticWeb/ServiceHub.Modules.StaticWeb.csproj" Id="28cb6fb7-ed37-43c0-b33c-4ed5abed6da5" />
   </Folder>
   <Project Path="ServiceHub.Contracts/ServiceHub.Contracts.csproj" Id="7da400b7-55ec-4153-b60d-ac2d50c570f6" />

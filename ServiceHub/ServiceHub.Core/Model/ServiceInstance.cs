@@ -7,7 +7,7 @@ namespace ServiceHub.Core.Model
     {
         private string _serviceName;
         private IServiceModule? _serviceModule { get; set; }
-        private IConfigContext _config { get; set; }
+        private IServiceContext _config { get; set; }
         private ILogContext _log { get; set; }
         public ServiceState State => _serviceModule?.State() ?? ServiceState.Error;
 
@@ -17,7 +17,7 @@ namespace ServiceHub.Core.Model
 
         public void Stop(CancellationToken ct) => _serviceModule?.Stop();
 
-        public ServiceInstance(ILogContext log, IConfigContext config, Type type) 
+        public ServiceInstance(ILogContext log, IServiceContext config, Type type) 
         {
             _config = config;
             _log = log;
@@ -26,7 +26,7 @@ namespace ServiceHub.Core.Model
             if (string.IsNullOrEmpty(_serviceName))
                 throw new ArgumentNullException("name");
 
-            IConfigContext? contextValue = config.GetConfig("parameters");
+            IServiceContext? contextValue = config.GetConfig("parameters");
             if (contextValue == null)
                 throw new ArgumentNullException("parameters");
 
@@ -35,8 +35,8 @@ namespace ServiceHub.Core.Model
                 if (!typeof(IServiceModule).IsAssignableFrom(type) || type.IsAbstract)
                     throw new Exception($"The {type.Name} Module is not valid" );
 
-                _serviceModule = (IServiceModule)Activator.CreateInstance(type);
-                _serviceModule?.Initialize(log, contextValue);
+                _serviceModule = (IServiceModule?)Activator.CreateInstance(type);
+                _serviceModule?.Initialize(log, config);
             }
             catch (Exception ex)
             {

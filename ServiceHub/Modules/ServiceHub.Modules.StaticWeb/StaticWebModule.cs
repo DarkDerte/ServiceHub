@@ -14,17 +14,17 @@ namespace ServiceHub.Modules.StaticWeb
         private WebServer? _server;
         private CancellationToken _token;
         private ILogContext? _logContext;
-        private IConfigContext? _configContext;
+        private IServiceContext? _configContext;
 
         public string Name => "StaticWebModule";
 
-        public void Initialize(ILogContext log, IConfigContext config)
+        public void Initialize(ILogContext log, IServiceContext config)
         {
             _logContext = log;
             _configContext = config;
 
-            var port = _configContext.Get("port") ?? "8080";
-            var root = _configContext.Get("directory") ?? "wwwroot";
+            var port = _configContext.Get("parameters:port") ?? "8080";
+            var root = _configContext.Get("parameters:directory") ?? "wwwroot";
 
             _port = int.Parse(port);
             _directory = root;
@@ -34,6 +34,8 @@ namespace ServiceHub.Modules.StaticWeb
 
         public async Task StartAsync(CancellationToken token)
         {
+            Stop();
+
             _token = token;
 
             var fileProvider = new PhysicalFileProvider(_directory);
