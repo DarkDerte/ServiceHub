@@ -28,12 +28,18 @@ namespace ServiceHub.Host
                 throw new Exception("Json Config is not valid");
 
             log.Info("ServiceHub running...");
-            foreach (var localContext in context.GetConfig("services").Items)
-            {
-                Core.ServiceHub.Instance.InitModule(log, localContext);
-                Core.ServiceHub.Instance.Start(localContext.Get("name"));
+            
+            var servicesCount = context.GetConfig("services")?.Items.Count() ?? 0;
 
+            for (int i = 0; i<servicesCount; i++)
+            {
+                context.SetNode($"services:{i}");
+                Core.ServiceHub.Instance.InitModule(log, context);
             }
+
+            foreach (var item in Core.ServiceHub.Instance.ServicesInitialized)
+                Core.ServiceHub.Instance.Start(item);
+
             log.Info("Press any key to stop...");
             Console.ReadKey();
 
